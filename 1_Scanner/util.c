@@ -64,8 +64,23 @@ void printToken(TokenType token, const char *tokenString)
   case RPAREN:
     fprintf(listing, ")\n");
     break;
+  case LBRACE:
+    fprintf(listing, "[\n");
+    break;
+  case RBRACE:
+    fprintf(listing, "]\n");
+    break;
+  case LCURLY:
+    fprintf(listing, "{\n");
+    break;
+  case RCURLY:
+    fprintf(listing, "}\n");
+    break;
   case SEMI:
     fprintf(listing, ";\n");
+    break;
+  case COMMA:
+    fprintf(listing, ",\n");
     break;
   case ENDFILE:
     fprintf(listing, "EOF\n");

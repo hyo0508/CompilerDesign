@@ -37,8 +37,8 @@ FILE *listing;
 FILE *code;
 
 /* allocate and set tracing flags */
-// int EchoSource = FALSE;
-int EchoSource = TRUE;
+int EchoSource = FALSE;
+// int EchoSource = TRUE;
 int TraceScan = TRUE;
 int TraceParse = FALSE;
 int TraceAnalyze = FALSE;

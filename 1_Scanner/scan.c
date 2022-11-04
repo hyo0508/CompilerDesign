@@ -96,7 +96,8 @@ static TokenType reservedLookup(char *s)
  * next token in source file
  */
 TokenType getToken(void)
-{ /* index for storing into tokenString */
+{
+  /* index for storing into tokenString */
   int tokenStringIndex = 0;
   /* holds current token to be returned */
   TokenType currentToken;
@@ -111,6 +112,7 @@ TokenType getToken(void)
     switch (state)
     {
     case START:
+      tokenStringIndex = 0;
       if (isdigit(c))
         state = INNUM;
       else if (isalpha(c))
@@ -126,10 +128,7 @@ TokenType getToken(void)
       else if ((c == ' ') || (c == '\t') || (c == '\n'))
         save = FALSE;
       else if (c == '/')
-      {
-        save = FALSE;
         state = INOVER;
-      }
       else
       {
         state = DONE;
@@ -165,6 +164,7 @@ TokenType getToken(void)
           break;
         case '}':
           currentToken = RCURLY;
+          break;
         case ';':
           currentToken = SEMI;
           break;
@@ -184,6 +184,7 @@ TokenType getToken(void)
       else
       {
         ungetNextChar();
+        save = FALSE;
         currentToken = ASSIGN;
       }
       break;
@@ -194,6 +195,7 @@ TokenType getToken(void)
       else
       {
         ungetNextChar();
+        save = FALSE;
         currentToken = LT;
       }
       break;
@@ -204,6 +206,7 @@ TokenType getToken(void)
       else
       {
         ungetNextChar();
+        save = FALSE;
         currentToken = GT;
       }
       break;
@@ -239,8 +242,14 @@ TokenType getToken(void)
         state = INCOMMENT_;
       break;
     case INCOMMENT_:
+      save = FALSE;
       if (c == '/')
         state = START;
+      else if (c == EOF)
+      {
+        state = DONE;
+        currentToken = ENDFILE;
+      }
       else if (c != '*')
         state = INCOMMENT;
       break;
@@ -274,7 +283,6 @@ TokenType getToken(void)
     if (state == DONE)
     {
       tokenString[tokenStringIndex] = '\0';
-      printf("tokenString: %s\n", tokenString);
       if (currentToken == ID)
         currentToken = reservedLookup(tokenString);
     }
