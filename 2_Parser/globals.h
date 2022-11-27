@@ -64,27 +64,43 @@ extern int lineno; /* source line number for listing */
 
 typedef enum
 {
+  DeclK,
+  TypeK,
+  ParamK,
   StmtK,
   ExpK
 } NodeKind;
 typedef enum
 {
+  VarK,
+  VarArrK,
+  FuncK
+} DeclKind;
+typedef enum
+{
+  TypeNameK
+} TypeKind;
+typedef enum
+{
+  SingleParamK,
+  ArrParamK
+} ParamKind;
+typedef enum
+{
   VoidParamK,
-  ParamK,
-  VarDeclK,
-  FuncDeclK,
-  CompoundK,
-  ReturnK,
-  WhileK,
+  CompK,
   IfK,
-  IfElseK
+  IfEK,
+  IterK,
+  RetK
 } StmtKind;
 typedef enum
 {
+  AssignK,
+  IdK,
+  ArrIdK,
   OpK,
   ConstK,
-  AssignK,
-  VarAccessK,
   CallK
 } ExpKind;
 
@@ -93,12 +109,18 @@ typedef enum
 {
   Void,
   Integer,
-  VoidArr,
-  IntegerArr,
+  VOIDARR,
+  INTARR,
   Boolean
 } ExpType;
 
 #define MAXCHILDREN 3
+
+typedef struct arrayAttr
+{
+  char *name;
+  int size;
+} ArrayAttr;
 
 typedef struct treeNode
 {
@@ -108,14 +130,19 @@ typedef struct treeNode
   NodeKind nodekind;
   union
   {
+    DeclKind decl;
+    TypeKind type;
+    ParamKind param;
     StmtKind stmt;
     ExpKind exp;
   } kind;
   union
   {
     TokenType op;
+    TokenType type;
     int val;
     char *name;
+    ArrayAttr arr;
   } attr;
   ExpType type; /* for type checking of exps */
 } TreeNode;

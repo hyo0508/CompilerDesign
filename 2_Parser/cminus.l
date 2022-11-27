@@ -1,6 +1,6 @@
 /****************************************************/
 /* File: tiny.l                                     */
-/* Lex specification for C-MINUS                    */
+/* Lex specification for TINY                       */
 /* Compiler Construction: Principles and Practice   */
 /* Kenneth C. Louden                                */
 /****************************************************/
@@ -10,8 +10,7 @@
 #include "util.h"
 #include "scan.h"
 /* lexeme of identifier or reserved word */
-char tokenString[2][MAXTOKENLEN+1];
-int tokenBit = 0;
+char tokenString[MAXTOKENLEN+1];
 %}
 
 digit       [0-9]
@@ -75,11 +74,11 @@ TokenType getToken(void)
     yyout = listing;
   }
   currentToken = yylex();
-  strncpy(tokenString[tokenBit],yytext,MAXTOKENLEN);
+  strncpy(tokenString,yytext,MAXTOKENLEN);
   if (TraceScan) {
     fprintf(listing,"\t%d: ",lineno);
-    printToken(currentToken,tokenString[tokenBit]);
+    printToken(currentToken,tokenString);
   }
-  tokenBit = !tokenBit;
   return currentToken;
 }
+
