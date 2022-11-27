@@ -10,7 +10,8 @@
 #include "util.h"
 #include "scan.h"
 /* lexeme of identifier or reserved word */
-char tokenString[MAXTOKENLEN+1];
+char tokenString[2][MAXTOKENLEN+1];
+int tokenBit = 0;
 %}
 
 digit       [0-9]
@@ -74,10 +75,11 @@ TokenType getToken(void)
     yyout = listing;
   }
   currentToken = yylex();
-  strncpy(tokenString,yytext,MAXTOKENLEN);
+  strncpy(tokenString[tokenBit],yytext,MAXTOKENLEN);
   if (TraceScan) {
     fprintf(listing,"\t%d: ",lineno);
-    printToken(currentToken,tokenString);
+    printToken(currentToken,tokenString[tokenBit]);
   }
+  tokenBit = !tokenBit;
   return currentToken;
 }

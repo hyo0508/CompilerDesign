@@ -12,7 +12,8 @@
 #define MAXTOKENLEN 40
 
 /* tokenString array stores the lexeme of each token */
-extern char tokenString[MAXTOKENLEN + 1];
+extern char tokenString[2][MAXTOKENLEN + 1];
+extern int tokenBit;
 
 /* function getToken returns the
  * next token in source file

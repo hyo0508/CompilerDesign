@@ -17,7 +17,7 @@ clean:
 	rm -vf cminus_parser *.o lex.yy.c y.tab.c y.tab.h y.output
 
 cminus_parser: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@ -lfl
+	$(CC) $(CFLAGS) $(OBJS) -o $@ -ll
 
 main.o: main.c globals.h util.h scan.h parse.h y.tab.h
 	$(CC) $(CFLAGS) -c main.c

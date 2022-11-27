@@ -102,6 +102,28 @@ void printToken(TokenType token, const char *tokenString)
   }
 }
 
+void printType(ExpType type)
+{
+  switch (type)
+  {
+  case Void:
+    fprintf(listing, "void");
+    break;
+  case VoidArr:
+    fprintf(listing, "void[]");
+    break;
+  case Integer:
+    fprintf(listing, "int");
+    break;
+  case IntegerArr:
+    fprintf(listing, "int[]");
+    break;
+  default:
+    fprintf(listing, "Unknown type\n");
+    break;
+  }
+}
+
 /* Function newStmtNode creates a new statement
  * node for syntax tree construction
  */
@@ -194,23 +216,48 @@ void printTree(TreeNode *tree)
     {
       switch (tree->kind.stmt)
       {
+      case ParamK:
+        fprintf(listing, "Parameter: name = %s, type = ", tree->attr.name);
+        printType(tree->type);
+        fprintf(listing, "\n");
+        break;
+      case VoidParamK:
+        fprintf(listing, "Void Parameter\n");
+        break;
+      case VarDeclK:
+        fprintf(listing, "Variable Declaration: name = %s, type = ", tree->attr.name);
+        printType(tree->type);
+        fprintf(listing, "\n");
+        break;
+      case FuncDeclK:
+        fprintf(listing, "Function Declaration: name = %s, return type = ", tree->attr.name);
+        printType(tree->type);
+        fprintf(listing, "\n");
+        break;
+      case CompoundK:
+        fprintf(listing, "Compound Statement:\n");
+        break;
+      case ReturnK:
+        if (tree->child[0] != NULL)
+        {
+          fprintf(listing, "Return Statement:\n");
+        }
+        else
+        {
+          fprintf(listing, "Non-value Return Statement\n");
+        }
+        break;
+      case WhileK:
+        fprintf(listing, "While Statement:\n");
+        break;
       case IfK:
-        fprintf(listing, "If\n");
+        fprintf(listing, "If Statement:\n");
         break;
-      case RepeatK:
-        fprintf(listing, "Repeat\n");
-        break;
-      case AssignK:
-        fprintf(listing, "Assign to: %s\n", tree->attr.name);
-        break;
-      case ReadK:
-        fprintf(listing, "Read: %s\n", tree->attr.name);
-        break;
-      case WriteK:
-        fprintf(listing, "Write\n");
+      case IfElseK:
+        fprintf(listing, "If-Else Statement:\n");
         break;
       default:
-        fprintf(listing, "Unknown ExpNode kind\n");
+        fprintf(listing, "Unknown StmtNode kind\n");
         break;
       }
     }
@@ -225,8 +272,14 @@ void printTree(TreeNode *tree)
       case ConstK:
         fprintf(listing, "Const: %d\n", tree->attr.val);
         break;
-      case IdK:
-        fprintf(listing, "Id: %s\n", tree->attr.name);
+      case AssignK:
+        fprintf(listing, "Assign:\n");
+        break;
+      case VarAccessK:
+        fprintf(listing, "Variable: name = %s\n", tree->attr.name);
+        break;
+      case CallK:
+        fprintf(listing, "Call: function name = %s\n", tree->attr.name);
         break;
       default:
         fprintf(listing, "Unknown ExpNode kind\n");
