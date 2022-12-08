@@ -92,7 +92,8 @@ typedef enum
   IfK,
   IfEK,
   IterK,
-  RetK
+  RetK,
+  NVRetK,
 } StmtKind;
 typedef enum
 {

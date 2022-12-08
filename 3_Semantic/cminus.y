@@ -119,7 +119,8 @@ param		     : type_specifier saveName
                    	  $$->attr.name = savedName;
                  	}
             	     | type_specifier saveName LBRACE RBRACE
-                 	{ $$ = newParamNode(ArrParamK);
+                 	{ $1->attr.type += 2;
+					  $$ = newParamNode(ArrParamK);
                    	  $$->child[0] = $1;
                    	  $$->attr.name = savedName;
                  	}
@@ -181,7 +182,7 @@ iteration_stmt       : WHILE LPAREN expression RPAREN statement
                  	}
             	     ;
 return_stmt    	     : RETURN SEMI
-                 	{ $$ = newStmtNode(RetK);
+                 	{ $$ = newStmtNode(NVRetK);
                    	  $$->child[0] = NULL;
                  	}
             	     | RETURN expression SEMI

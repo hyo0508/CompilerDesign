@@ -307,7 +307,7 @@ void printTree(TreeNode *tree)
         fprintf(listing, "Parameter: name = %s, ", tree->attr.name);
         break;
       case ArrParamK:
-        fprintf(listing, "Array parameter, name : %s, ", tree->attr.name);
+        fprintf(listing, "Parameter, name : %s, ", tree->attr.name);
         break;
       default:
         fprintf(listing, "Unknown ParamNode kind\n");
@@ -335,6 +335,9 @@ void printTree(TreeNode *tree)
         break;
       case RetK:
         fprintf(listing, "Return Statement:\n");
+        break;
+      case NVRetK:
+        fprintf(listing, "Non-value Return Statement\n");
         break;
       default:
         fprintf(listing, "Unknown ExpNode kind\n");
