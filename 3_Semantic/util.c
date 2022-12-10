@@ -85,14 +85,6 @@ void printToken(TokenType token, const char *tokenString)
   case ENDFILE:
     fprintf(listing, "EOF\n");
     break;
-  case NUM:
-    fprintf(listing,
-            "NUM, val= %s\n", tokenString);
-    break;
-  case ID:
-    fprintf(listing,
-            "ID, name= %s\n", tokenString);
-    break;
   case ERROR:
     fprintf(listing,
             "ERROR: %s\n", tokenString);
