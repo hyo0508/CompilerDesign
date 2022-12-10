@@ -254,7 +254,7 @@ void printTree(TreeNode *tree)
         fprintf(listing, "Variable Declaration: name = %s, ", tree->attr.name);
         break;
       case VarArrK:
-        fprintf(listing, "Variable Declaration: name = %s, ", tree->attr.arr.name);
+        fprintf(listing, "Variable Declaration: name = %s, ", tree->attr.name);
         break;
       case FuncK:
         fprintf(listing, "Function Declaration: name = %s, return ", tree->attr.name);

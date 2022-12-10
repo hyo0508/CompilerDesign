@@ -68,12 +68,10 @@ var_declaration      : type_specifier saveName SEMI
                  	}
         	     | type_specifier saveName LBRACE saveNumber RBRACE SEMI
                  	{ $1->attr.type += 2;
-					  $$ = newDeclNode(VarArrK);
+					  $$ = newDeclNode(VarK);
                    	  $$->child[0] = $1;
                    	  $$->lineno = lineno;
-                   	  $$->attr.arr.name = savedName;
-                   	  $$->child[1] = newExpNode(ConstK);
-                   	  $$->child[1]->attr.val = savedNum;
+                   	  $$->attr.name = savedName;
                 	}
             	     ;
 type_specifier       : INT

@@ -144,6 +144,7 @@ typedef struct treeNode
     int val;
     char *name;
     ArrayAttr arr;
+    char *scopeName;
   } attr;
   ExpType type; /* for type checking of exps */
 } TreeNode;
