@@ -8,7 +8,7 @@ CC = gcc
 
 CFLAGS = -W -Wall -g
 
-OBJS = main.o util.o lex.yy.o y.tab.o symtab.o analyze.o
+OBJS = main.o util.o lex.yy.o y.tab.o symtab.o analyze.o code.o cgen.o
 
 .PHONY: all clean
 all: cminus_semantic
@@ -19,7 +19,7 @@ clean:
 cminus_semantic: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ -ll
 
-main.o: main.c globals.h util.h scan.h parse.h y.tab.h analyze.h
+main.o: main.c globals.h util.h scan.h parse.h y.tab.h analyze.h cgen.h
 	$(CC) $(CFLAGS) -c main.c
 
 util.o: util.c util.h globals.h y.tab.h
@@ -41,6 +41,12 @@ y.tab.c: cminus.y
 
 analyze.o: analyze.c analyze.h globals.h y.tab.h symtab.h util.h
 	$(CC) $(CFLAGS) -c analyze.c
+
+code.o: code.c code.h globals.h y.tab.h
+	$(CC) $(CFLAGS) -c code.c
+
+cgen.o: cgen.c globals.h y.tab.h symtab.h code.h cgen.h
+	$(CC) $(CFLAGS) -c cgen.c
 
 symtab.o: symtab.c symtab.h
 	$(CC) $(CFLAGS) -c symtab.c

@@ -99,7 +99,7 @@ fun_declaration	     : type_specifier saveName
            	     ;
 params		     : param_list  { $$ = $1; }
 		     | type_specifier
-                 	{ $$ = newStmtNode(VoidParamK);
+                 	{ $$ = newParamNode(VoidParamK);
                  	}
             	     ;
 param_list  	     : param_list COMMA param

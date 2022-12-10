@@ -83,11 +83,11 @@ typedef enum
 typedef enum
 {
   SingleParamK,
-  ArrParamK
+  ArrParamK,
+  VoidParamK,
 } ParamKind;
 typedef enum
 {
-  VoidParamK,
   CompK,
   IfK,
   IfEK,

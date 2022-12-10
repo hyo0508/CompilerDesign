@@ -301,6 +301,9 @@ void printTree(TreeNode *tree)
       case ArrParamK:
         fprintf(listing, "Parameter, name : %s, ", tree->attr.name);
         break;
+      case VoidParamK:
+        fprintf(listing, "Void Parameter\n");
+        break;
       default:
         fprintf(listing, "Unknown ParamNode kind\n");
         break;
@@ -310,9 +313,6 @@ void printTree(TreeNode *tree)
     {
       switch (tree->kind.stmt)
       {
-      case VoidParamK:
-        fprintf(listing, "Void Parameter\n");
-        break;
       case CompK:
         fprintf(listing, "Compound Statement:\n");
         break;
