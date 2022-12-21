@@ -64,89 +64,59 @@ extern int lineno; /* source line number for listing */
 
 typedef enum
 {
-  DeclK,
-  TypeK,
-  ParamK,
-  StmtK,
-  ExpK
+   StmtK,
+   ExpK
 } NodeKind;
 typedef enum
 {
-  VarK,
-  VarArrK,
-  FuncK
-} DeclKind;
-typedef enum
-{
-  TypeNameK
-} TypeKind;
-typedef enum
-{
-  SingleParamK,
-  ArrParamK,
-  VoidParamK,
-} ParamKind;
-typedef enum
-{
-  CompK,
-  IfK,
-  IfEK,
-  IterK,
-  RetK,
-  NVRetK,
+   VarDeclK,
+   FunDeclK,
+   CompK,
+   IfK,
+   IfElseK,
+   WhileK,
+   ReturnK,
+   AssignK,
 } StmtKind;
 typedef enum
 {
-  AssignK,
-  IdK,
-  ArrIdK,
-  OpK,
-  ConstK,
-  CallK
+   OpK,
+   ConstK,
+   IdK,
+   ParamK,
+   VoidParamK,
+   CallK,
 } ExpKind;
 
 /* ExpType is used for type checking */
 typedef enum
 {
-  Void,
-  Integer,
-  VOIDARR,
-  INTARR,
-  Boolean
+   Void,
+   Integer,
+   VoidArr,
+   IntegerArr
 } ExpType;
 
 #define MAXCHILDREN 3
 
-typedef struct arrayAttr
-{
-  char *name;
-  int size;
-} ArrayAttr;
-
 typedef struct treeNode
 {
-  struct treeNode *child[MAXCHILDREN];
-  struct treeNode *sibling;
-  int lineno;
-  NodeKind nodekind;
-  union
-  {
-    DeclKind decl;
-    TypeKind type;
-    ParamKind param;
-    StmtKind stmt;
-    ExpKind exp;
-  } kind;
-  union
-  {
-    TokenType op;
-    TokenType type;
-    int val;
-    char *name;
-    ArrayAttr arr;
-    char *scopeName;
-  } attr;
-  ExpType type; /* for type checking of exps */
+   struct treeNode *child[MAXCHILDREN];
+   struct treeNode *sibling;
+   int lineno;
+   NodeKind nodekind;
+   union
+   {
+      StmtKind stmt;
+      ExpKind exp;
+   } kind;
+   union
+   {
+      TokenType op;
+      int val;
+      char *name;
+   } attr;
+   ExpType type; /* for type checking of exps */
 } TreeNode;
 
 /**************************************************/

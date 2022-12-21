@@ -36,7 +36,6 @@ typedef struct BucketListRec
     LineList lines;
     int memloc; /* memory location for variable */
     struct BucketListRec *next;
-    struct ScopeListRec *scope;
     TreeNode *treeNode;
 } *BucketList;
 
@@ -53,13 +52,14 @@ typedef struct ScopeListRec
 } *ScopeList;
 
 extern ScopeList currScope;
+extern ScopeList tempScope;
 
 ScopeList findScope(char *scope);
 ScopeList addScope(char *name);
 
-void st_insert(ScopeList scope, char *name, ExpType type, int lineno, TreeNode *t);
-BucketList st_lookup(ScopeList scope, char *name);
-BucketList st_lookup_excluding_parent(ScopeList scope, char *name);
+void st_insert(char *scope, char *name, ExpType type, int lineno, int loc, TreeNode *t);
+BucketList st_lookup(char *scope, char *name);
+BucketList st_lookup_excluding_parent(char *scope, char *name);
 
 void printSymTab(FILE *listing);
 

@@ -1,6 +1,6 @@
 /****************************************************/
 /* File: tiny.l                                     */
-/* Lex specification for C-MINUS                    */
+/* Lex specification for TINY                       */
 /* Compiler Construction: Principles and Practice   */
 /* Kenneth C. Louden                                */
 /****************************************************/
@@ -81,3 +81,4 @@ TokenType getToken(void)
   }
   return currentToken;
 }
+

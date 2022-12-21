@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "symtab.h"
+#include "util.h"
 
 /* SHIFT is the power of two used as multiplier
    in hash function  */
@@ -22,7 +23,6 @@
 static ScopeList scopes[SIZE];
 static int sidx = 0;
 ScopeList currScope = NULL;
-ScopeList tempScope = NULL;
 
 /* the hash function */
 static int hash(char *key)
@@ -48,7 +48,7 @@ ScopeList findScope(char *scope)
 ScopeList addScope(char *name)
 {
   ScopeList newScope = (ScopeList)malloc(sizeof(struct ScopeListRec));
-  newScope->name = name;
+  newScope->name = copyString(name);
   newScope->parent = currScope;
   currScope = newScope;
   scopes[sidx++] = newScope;
@@ -60,11 +60,11 @@ ScopeList addScope(char *name)
  * loc = memory location is inserted only the
  * first time, otherwise ignored
  */
-void st_insert(char *scope, char *name, ExpType type, int lineno, int loc, TreeNode *t)
+void st_insert(ScopeList scope, char *name, ExpType type, int lineno, TreeNode *t)
 {
-  ScopeList insertScope = findScope(scope);
+  // ScopeList insertScope = findScope(scope);
   int h = hash(name);
-  BucketList l = insertScope->bucket[h];
+  BucketList l = scope->bucket[h];
   while ((l != NULL) && (strcmp(name, l->name) != 0))
     l = l->next;
   if (l == NULL) /* variable not yet in table */
@@ -75,10 +75,11 @@ void st_insert(char *scope, char *name, ExpType type, int lineno, int loc, TreeN
     l->lines = (LineList)malloc(sizeof(struct LineListRec));
     l->lines->lineno = lineno;
     l->lines->next = NULL;
-    l->memloc = loc;
+    l->memloc = scope->location++;
+    l->next = scope->bucket[h];
+    l->scope = scope;
     l->treeNode = t;
-    l->next = insertScope->bucket[h];
-    insertScope->bucket[h] = l;
+    scope->bucket[h] = l;
   }
   else /* found in table, so just add line number */
   {
@@ -88,16 +89,15 @@ void st_insert(char *scope, char *name, ExpType type, int lineno, int loc, TreeN
     t->next = (LineList)malloc(sizeof(struct LineListRec));
     t->next->lineno = lineno;
     t->next->next = NULL;
-    l->treeNode = t;
   }
 } /* st_insert */
 
 /* Function st_lookup returns the memory
  * location of a variable or -1 if not found
  */
-BucketList st_lookup(char *scope, char *name)
+BucketList st_lookup(ScopeList scope, char *name)
 {
-  ScopeList lookupScope = findScope(scope);
+  ScopeList lookupScope = scope;
   int h = hash(name);
   while (lookupScope != NULL)
   {
@@ -106,20 +106,18 @@ BucketList st_lookup(char *scope, char *name)
       l = l->next;
     if (l != NULL)
     {
-      tempScope = lookupScope;
       return l;
     }
     lookupScope = lookupScope->parent;
   }
   return NULL;
 }
-BucketList st_lookup_excluding_parent(char *scope, char *name)
+BucketList st_lookup_excluding_parent(ScopeList scope, char *name)
 {
-  ScopeList lookupScope = findScope(scope);
-  if (lookupScope == NULL)
+  if (scope == NULL)
     return NULL;
   int h = hash(name);
-  BucketList l = lookupScope->bucket[h];
+  BucketList l = scope->bucket[h];
   while ((l != NULL) && (strcmp(name, l->name) != 0))
     l = l->next;
   if (l != NULL)
@@ -127,16 +125,18 @@ BucketList st_lookup_excluding_parent(char *scope, char *name)
   return NULL;
 }
 
-const char *typeToStr(ExpType type)
+static const char *typeToString(ExpType type)
 {
   switch (type)
   {
   case Void:
-    return "Void";
+    return "void";
   case Integer:
-    return "Integer";
-  case INTARR:
-    return "Integer[]";
+    return "int";
+  case VoidArr:
+    return "void[]";
+  case IntegerArr:
+    return "int[]";
   default:
     return "unknown";
   }
@@ -165,7 +165,7 @@ void printSymTab(FILE *listing)
           {
             LineList t = l->lines;
             fprintf(listing, "%-14s ", l->name);
-            fprintf(listing, "%-11s ", typeToStr(l->type));
+            fprintf(listing, "%-11s ", typeToString(l->type));
             fprintf(listing, "%-8d  ", l->memloc);
             fprintf(listing, "%-2s  ", scope->name);
             while (t != NULL)

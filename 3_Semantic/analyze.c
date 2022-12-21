@@ -15,6 +15,8 @@
 
 static int scopeFlag = 0;
 static char *funcName = NULL;
+BucketList l = NULL;
+ScopeList sc = NULL;
 
 void addInput();
 void addOutput();
@@ -105,96 +107,68 @@ static void traverse(TreeNode *t,
  */
 static void insertNode(TreeNode *t)
 {
-  switch (t->nodekind)
+  if (t->nodekind == StmtK)
   {
-  case DeclK:
-    t->type = t->child[0]->attr.type;
-    switch (t->kind.decl)
+    switch (t->kind.stmt)
     {
-    case VarK:
-    case VarArrK:
-      if (st_lookup_excluding_parent(currScope->name, t->attr.name) != NULL)
+    case VarDeclK:
+      if (st_lookup_excluding_parent(currScope, t->attr.name) != NULL)
       {
         semanticError(RedefSym, t->attr.name, t->lineno);
-        break;
       }
-      st_insert(currScope->name, t->attr.name, t->type, t->lineno, currScope->location++, t);
+      else
+      {
+        st_insert(currScope, t->attr.name, t->type, t->lineno, t);
+      }
       break;
-    case FuncK:
-      funcName = t->attr.name;
-      if (st_lookup_excluding_parent(currScope->name, t->attr.name) != NULL)
+    case FunDeclK:
+      if (st_lookup_excluding_parent(currScope, t->attr.name) != NULL)
       {
         semanticError(RedefSym, t->attr.name, t->lineno);
-        break;
       }
-      st_insert(currScope->name, t->attr.name, t->type, t->lineno, currScope->location++, t);
-      addScope(t->attr.name);
-      scopeFlag = 1;
+      else
+      {
+        st_insert(currScope, t->attr.name, t->type, t->lineno, t);
+        addScope(t->attr.name);
+        scopeFlag = 1;
+        funcName = t->attr.name;
+      }
       break;
-    default:
-      break;
-    }
-    break;
-  case TypeK:
-    break;
-  case ParamK:
-    if (t->kind.param == VoidParamK)
-      break;
-    t->type = t->child[0]->attr.type;
-    st_insert(currScope->name, t->attr.name, t->type, t->lineno, currScope->location++, t);
-    break;
-  case StmtK:
-    if (t->kind.stmt == CompK)
-    {
+    case CompK:
       if (scopeFlag == 1)
       {
         scopeFlag = 0;
       }
       else
       {
-        addScope("temp");
+        char buffer[64];
+        sprintf(buffer, "%s:%d", funcName, t->lineno);
+        addScope(buffer);
       }
-      t->attr.scopeName = currScope->name;
-    }
-    break;
-  case ExpK:
-    switch (t->kind.exp)
-    {
-    case ConstK:
-    case OpK:
-      t->type = Integer;
       break;
-    case CallK:
-    case IdK:
-    case ArrIdK:
-    {
-      BucketList l = st_lookup(currScope->name, t->attr.name);
-      if (l == NULL)
-      {
-        if (t->kind.exp == CallK)
-        {
-          semanticError(UndecFunc, t->attr.name, t->lineno);
-        }
-        else
-        {
-          semanticError(UndecVar, t->attr.name, t->lineno);
-        }
-        break;
-      }
-      t->type = l->type;
-      if (t->type == INTARR && t->child[1] != NULL)
-      {
-        t->type = Integer;
-      }
-      st_insert(tempScope->name, t->attr.name, t->type, t->lineno, 0, t);
-      break;
-    }
     default:
       break;
     }
-    break;
-  default:
-    break;
+  }
+  else if (t->nodekind == ExpK)
+  {
+    switch (t->kind.exp)
+    {
+    case ParamK:
+      st_insert(currScope, t->attr.name, t->type, t->lineno, t);
+      break;
+    case IdK:
+    case CallK:
+      l = st_lookup(currScope, t->attr.name);
+      if (l != NULL)
+      {
+        t->type = l->type;
+        st_insert(l->scope, t->attr.name, t->type, t->lineno, t);
+      }
+      break;
+    default:
+      break;
+    }
   }
 }
 
@@ -225,102 +199,172 @@ void buildSymtab(TreeNode *syntaxTree)
  */
 static void checkNode(TreeNode *t)
 {
-  switch (t->nodekind)
+  TreeNode *param = NULL;
+  TreeNode *arg = NULL;
+  ExpType lType;
+  ExpType rType;
+  ScopeList globalScope = findScope("global");
+  if (t->nodekind == StmtK)
   {
-  case ExpK:
-    switch (t->kind.exp)
+    switch (t->kind.stmt)
     {
-    case OpK:
-      t->type = Integer;
-      if (t->child[0] != NULL && t->child[1] != NULL && ((t->child[0]->type != Integer) || (t->child[1]->type != Integer)))
+    case VarDeclK:
+      if (t->type == Void || t->type == VoidArr)
       {
-        semanticError(InvalOper, "", t->lineno);
-        break;
+        semanticError(VoidVar, t->attr.name, t->lineno);
       }
       break;
-    case IdK:
-    case ArrIdK:
-    {
-      BucketList l = st_lookup(currScope->name, t->attr.name);
-      if (l == NULL)
-      {
-        break;
-      }
-      TreeNode *symbolNode = l->treeNode;
-      if (t->kind.exp == ArrIdK)
-      {
-        if ((symbolNode->nodekind == DeclK && l->type != INTARR) || (symbolNode->nodekind == ParamK && l->type != INTARR))
-        {
-          semanticError(InvalAssign, "", lineno);
-          break;
-        }
-      }
-      if (t->child[0] != NULL && t->child[0]->type != Integer)
-      {
-        semanticError(NoIntIdx, t->attr.name, t->lineno);
-      }
-      t->type = symbolNode->type;
+    case CompK:
+      currScope = currScope->parent;
       break;
-    }
+    case IfK:
+    case IfElseK:
+    case WhileK:
+      if (t->child[0]->type != Integer)
+      {
+        semanticError(InvalCond, "", t->lineno);
+      }
+      break;
+    case ReturnK:
+      sc = currScope;
+      while (sc->parent != globalScope)
+      {
+        sc = sc->parent;
+      }
+      l = st_lookup(globalScope, sc->name);
+      if ((t->child[0] != NULL && l->type == Void) ||
+          (t->child[0] == NULL && l->type != Void) ||
+          (t->child[0] != NULL && l->type != Void && t->child[0]->type != l->type))
+      {
+        semanticError(InvalReturn, "", t->lineno);
+      }
+      break;
     case AssignK:
-      if (t->child[0] == NULL && t->child[1] == NULL && t->child[0]->type != t->child[1]->type)
+      if (t->child[0]->type != t->child[1]->type)
       {
         semanticError(InvalAssign, "", t->lineno);
       }
       break;
-    case CallK:
-      break;
     default:
       break;
     }
-    break;
-  case StmtK:
-    switch (t->kind.stmt)
+  }
+  else if (t->nodekind == ExpK)
+  {
+    switch (t->kind.exp)
     {
-    case IfK:
-    case IfEK:
-    case IterK:
-      if (t->child[0] == NULL || t->child[0]->type != Integer)
-        semanticError(InvalCond, "", t->lineno);
-      break;
-    default:
-      break;
-    }
-    break;
-  case DeclK:
-    switch (t->kind.decl)
-    {
-    case VarK:
-    case VarArrK:
-      if (t->type == Void)
+    case OpK:
+      lType = t->child[0]->type;
+      rType = t->child[1]->type;
+
+      if (lType == IntegerArr && t->child[0]->child[0] != NULL)
       {
-        semanticError(VoidVar, t->attr.name, t->lineno);
+        lType = Integer;
       }
+      if (rType == IntegerArr && t->child[1]->child[0] != NULL)
+      {
+        rType = Integer;
+      }
+
+      if (lType != Integer || rType != Integer)
+      {
+        semanticError(InvalOper, "", t->lineno);
+      }
+      else
+      {
+        t->type = Integer;
+      }
+      break;
+    case ConstK:
+      t->type = Integer;
+      break;
+    case IdK:
+      l = st_lookup(currScope, t->attr.name);
+      if (l == NULL)
+      {
+        semanticError(UndecVar, t->attr.name, t->lineno);
+        break;
+      }
+      t->type = l->type;
+      if (t->child[0] == NULL)
+      {
+        break;
+      }
+      if (l->type == IntegerArr)
+      {
+        if (t->child[0]->type != Integer)
+        {
+          semanticError(NoIntIdx, t->attr.name, t->lineno);
+        }
+        t->type -= 2;
+      }
+      else if (l->type == Integer)
+      {
+        semanticError(NoArrIdx, t->attr.name, t->lineno);
+      }
+      break;
+    case CallK:
+      l = st_lookup(currScope, t->attr.name);
+      if (l == NULL)
+      {
+        semanticError(UndecFunc, t->attr.name, t->lineno);
+        break;
+      }
+      t->type = l->type;
+      param = l->treeNode->child[0];
+      arg = t->child[0];
+
+      if (param->kind.exp == VoidParamK)
+      {
+        if (arg != NULL)
+        {
+          semanticError(InvalCall, t->attr.name, t->lineno);
+        }
+        break;
+      }
+
+      while (param || arg)
+      {
+        if (!param || !arg || param->type != arg->type)
+        {
+          semanticError(InvalCall, t->attr.name, t->lineno);
+          break;
+        }
+        param = param->sibling;
+        arg = arg->sibling;
+      }
+      break;
     default:
       break;
     }
-    break;
-  default:
-    break;
   }
 }
 
 static void beforeCheckNode(TreeNode *t)
 {
-  switch (t->nodekind)
+  if (t->nodekind == StmtK)
   {
-  case DeclK:
-    if (t->kind.decl == FuncK)
+    switch (t->kind.stmt)
     {
+    case FunDeclK:
+      currScope = findScope(t->attr.name);
+      scopeFlag = 1;
       funcName = t->attr.name;
+      break;
+    case CompK:
+      if (scopeFlag == 1)
+      {
+        scopeFlag = 0;
+      }
+      else
+      {
+        char buffer[64];
+        sprintf(buffer, "%s:%d", funcName, t->lineno);
+        currScope = findScope(buffer);
+      }
+    default:
+      break;
     }
-    break;
-  case StmtK:
-    if (t->kind.stmt == CompK)
-      currScope = findScope(t->attr.scopeName);
-    break;
-  default:
-    break;
   }
 }
 
@@ -335,57 +379,27 @@ void typeCheck(TreeNode *syntaxTree)
 
 void addInput()
 {
-
-  TreeNode *func;
-  TreeNode *typeSpec;
-  TreeNode *param;
-  TreeNode *compStmt;
-
-  typeSpec = newTypeNode(FuncK);
-  typeSpec->attr.type = Integer;
-
-  compStmt = newStmtNode(CompK);
-  compStmt->child[0] = NULL;
-  compStmt->child[1] = NULL;
-
-  func = newDeclNode(FuncK);
-  func->type = Integer;
-  func->lineno = 0;
-  func->attr.name = "input";
-  func->child[0] = typeSpec;
-  func->child[1] = NULL;
-  func->child[2] = compStmt;
-
-  st_insert(currScope->name, "input", Integer, 0, currScope->location++, func);
+  TreeNode *t = newStmtNode(FunDeclK);
+  TreeNode *param = newExpNode(VoidParamK);
+  TreeNode *comp = newStmtNode(CompK);
+  t->attr.name = "input";
+  t->type = Integer;
+  t->child[0] = param;
+  t->child[1] = comp;
+  t->lineno = 0;
+  st_insert(currScope, t->attr.name, t->type, t->lineno, t);
 }
 
 void addOutput()
 {
-
-  TreeNode *func;
-  TreeNode *typeSpec;
-  TreeNode *param;
-  TreeNode *compStmt;
-  typeSpec = newTypeNode(FuncK);
-  typeSpec->attr.type = Void;
-
-  param = newParamNode(SingleParamK);
-  param->attr.name = "arg";
+  TreeNode *t = newStmtNode(FunDeclK);
+  TreeNode *param = newExpNode(ParamK);
+  TreeNode *comp = newStmtNode(CompK);
   param->type = Integer;
-  param->child[0] = newTypeNode(FuncK);
-  param->child[0]->attr.type = Integer;
-
-  compStmt = newStmtNode(CompK);
-  compStmt->child[0] = NULL;
-  compStmt->child[1] = NULL;
-
-  func = newDeclNode(FuncK);
-  func->type = Void;
-  func->lineno = 0;
-  func->attr.name = "output";
-  func->child[0] = typeSpec;
-  func->child[1] = param;
-  func->child[2] = compStmt;
-
-  st_insert(currScope->name, "output", Void, 0, currScope->location++, func);
+  t->attr.name = "output";
+  t->type = Void;
+  t->child[0] = param;
+  t->child[1] = comp;
+  t->lineno = 0;
+  st_insert(currScope, t->attr.name, t->type, t->lineno, t);
 }
