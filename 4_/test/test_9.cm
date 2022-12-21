@@ -1,7 +1,3 @@
-void output(int value) {
-    return;
-}
-
 int main(void)
 {
     int x[5];

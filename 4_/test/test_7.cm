@@ -1,15 +1,15 @@
-void x(int y, int c[])
+int x(int y)
 {
-    return;
+    return y + 1;
 }
 
 int main(void)
 {
     int a;
-    int b[5];
+    int b;
     int c;
 
-    return x(a, b);
+    return x(a, b, c);
 }
 
 /* Invalid function call at line 12 (name : "x") */
