@@ -1,0 +1,8 @@
+int main(voidi)
+{
+    if (output(5)) { }
+
+    return 0;
+}
+
+/* invalid condition at line 5 */

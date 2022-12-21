@@ -1,0 +1,7 @@
+int main(void)
+{
+    void x;
+    return 0;
+}
+
+/* The void-type variable is declared at line 3 (name : "x") */

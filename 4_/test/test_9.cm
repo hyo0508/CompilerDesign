@@ -1,0 +1,14 @@
+void output(int value) {
+    return;
+}
+
+int main(void)
+{
+    int x[5];
+    x[output(5)] = 3 + 5;
+
+    return 0;
+}
+
+/* Invalid array indexing at line 4 (name: "x") */
+/* indices should be integer */

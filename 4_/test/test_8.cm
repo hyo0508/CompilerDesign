@@ -1,0 +1,7 @@
+int main(void)
+{
+    return x;
+}
+
+/* undeclared variable "x" is used at line 3 */
+/* Invalid return at line 3 */
